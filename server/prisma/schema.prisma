@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Example model - you can modify or remove this
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Employee {
+  id             String  @id @default(cuid())
+  email          String  @unique
+  name           String?
+  firstName      String
+  lastName       String
+  type           String
+  baseHourlyRate Float
+  superRate      Float
+  bankBsb        String
+  bankAccount    String
+
+  Timesheet      Timesheet[]
+  TimesheetEntry TimesheetEntry[]
+}
+
+model Timesheet {
+  id             String           @id @default(cuid())
+  employee       Employee         @relation(fields: [employeeId], references: [id])
+  employeeId     String
+  start          DateTime
+  end            DateTime
+  allowances     Float
+  TimesheetEntry TimesheetEntry[]
+}
+
+model TimesheetEntry {
+  id              String    @id @default(cuid())
+  timesheet       Timesheet @relation(fields: [timesheetId], references: [id])
+  timesheetId     String
+  employee        Employee  @relation(fields: [employeeId], references: [id])
+  employeeId      String
+  date            DateTime
+  start           DateTime
+  end             DateTime
+  unpaidBreakMins Int
+}
+
+model TaxRates {
+  id String @id @default(cuid())
+  min Float
+  max Float
+  rate Float
+}
