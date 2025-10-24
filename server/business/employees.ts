@@ -1,4 +1,4 @@
-import { prisma } from "../db";
+import { prisma } from "../utils/db";
 
 export const GetEmployees = async () => {
     const employees = await prisma.employee.findMany();

@@ -12,8 +12,8 @@ for (const emp of emps) {
     });
 
     const taxAmount = parseFloat((await tax(result.gross)).toFixed(2));
-    const superAmount = parseFloat((result.gross * 0.115).toFixed(2)); // 11.5% super rate
+    const superAmount = parseFloat((result.gross * emp.superRate).toFixed(2)); // 11.5% super rate
     const net = parseFloat((result.gross - taxAmount).toFixed(2));
 
-    console.log(`${emp.name}: ${result.normalHours.toFixed(1)} normal + ${result.overtimeHours.toFixed(2)} overtime, gross $${result.gross.toFixed(2)}, tax $${taxAmount}, super $${superAmount}, net $${net}`);
+    console.log(`${emp.firstName} ${emp.lastName}: ${result.normalHours.toFixed(1)} normal + ${result.overtimeHours.toFixed(2)} overtime, gross $${result.gross.toFixed(2)}, tax $${taxAmount}, super $${superAmount}, net $${net}`);
 }

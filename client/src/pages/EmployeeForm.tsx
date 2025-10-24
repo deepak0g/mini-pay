@@ -236,7 +236,6 @@ export default function EmployeeForm() {
                                     type="text"
                                     id="bankAccount"
                                     name="bankAccount"
-                                    required
                                     value={formData.bankAccount}
                                     onChange={(e) => setFormData({ ...formData, bankAccount: e.target.value })}
                                     className="input-field"

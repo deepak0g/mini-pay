@@ -1,18 +1,23 @@
 import { Router } from "express";
-import { prisma } from "../db";
+import { prisma } from "../utils/db";
+import { logger } from "../utils/logger";
 import { grossPay, tax } from "../business/pay";
-import { parseISO } from "date-fns";
+import { parse } from "date-fns";
+import { validateMiddleware } from "../utils/utils";
+import { payrunCalculateSchema } from "../../shared/schemas";
 
 const router = Router();
 
 // Run pay calculation
-router.post("/calculate", async (req, res) => {
+router.post("/calculate", validateMiddleware({
+    schema: payrunCalculateSchema
+}), async (req, res) => {
     try {
         const { startDate, endDate, employeeIds } = req.body;
-        
-        const start = parseISO(startDate);
-        const end = parseISO(endDate);
-        
+
+        const start = parse(startDate, 'yyyy-MM-dd', new Date());
+        const end = parse(endDate, 'yyyy-MM-dd', new Date());
+
         // Get employees to process
         let employees;
         if (employeeIds && employeeIds.length > 0) {
@@ -22,9 +27,9 @@ router.post("/calculate", async (req, res) => {
         } else {
             employees = await prisma.employee.findMany();
         }
-        
+
         const payslips = [];
-        
+
         for (const employee of employees) {
             try {
                 const payData = await grossPay({
@@ -32,11 +37,11 @@ router.post("/calculate", async (req, res) => {
                     start,
                     end,
                 });
-                
+
                 const taxAmount = await tax(payData.gross);
                 const superAmount = payData.gross * employee.superRate;
                 const net = payData.gross - taxAmount;
-                
+
                 payslips.push({
                     employee: {
                         id: employee.id,
@@ -53,12 +58,12 @@ router.post("/calculate", async (req, res) => {
                     net,
                 });
             } catch (error) {
-                console.error(`Error processing employee ${employee.id}:`, error);
+                logger.warn({ error, employeeId: employee.id }, "Error processing employee, skipping");
                 // Skip employees with no timesheet data
                 continue;
             }
         }
-        
+
         // Calculate totals
         const totals = payslips.reduce(
             (acc, slip) => ({
@@ -80,7 +85,7 @@ router.post("/calculate", async (req, res) => {
                 net: 0,
             }
         );
-        
+
         res.json({
             startDate,
             endDate,
@@ -88,7 +93,7 @@ router.post("/calculate", async (req, res) => {
             totals,
         });
     } catch (error) {
-        console.error(error);
+        logger.error({ error }, "Failed to calculate pay run");
         res.status(500).json({ error: "Failed to calculate pay run" });
     }
 });

@@ -2,6 +2,18 @@ import type { Employee, Timesheet, PayRunResult } from "../types";
 
 const API_BASE = "http://localhost:3000/api";
 
+const fetch = async (url: string, options?: RequestInit) => {
+    const token = localStorage.getItem("token") || "xxxxxxxxxxxxxxxxxxxx";
+    options = {
+        ...options,
+        headers: {
+            ...options?.headers,
+            Authorization: `Bearer ${token}`,
+        },
+    };
+    return await window.fetch(url, options);
+};
+
 // Employees API
 export const employeesApi = {
     getAll: async (): Promise<Employee[]> => {

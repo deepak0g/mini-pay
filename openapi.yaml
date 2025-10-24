@@ -1,0 +1,235 @@
+openapi: 3.1.0
+info:
+  title: Payroo Mini Payrun API
+  version: 1.0.0
+servers:
+  - url: http://localhost:4000
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    Employee:
+      type: object
+      required: [id, firstName, lastName, type, baseHourlyRate, superRate]
+      properties:
+        id:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        type:
+          type: string
+          enum: [hourly]
+        baseHourlyRate:
+          type: number
+        superRate:
+          type: number
+        bank:
+          type: object
+          properties:
+            bsb:
+              type: string
+            account:
+              type: string
+    TimesheetEntry:
+      type: object
+      required: [date, start, end, unpaidBreakMins]
+      properties:
+        date:
+          type: string
+          format: date
+        start:
+          type: string
+          example: "09:00"
+        end:
+          type: string
+          example: "17:30"
+        unpaidBreakMins:
+          type: integer
+    Timesheet:
+      type: object
+      required: [employeeId, periodStart, periodEnd, entries]
+      properties:
+        employeeId:
+          type: string
+        periodStart:
+          type: string
+          format: date
+        periodEnd:
+          type: string
+          format: date
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimesheetEntry'
+        allowances:
+          type: number
+          default: 0
+    PayrunRequest:
+      type: object
+      required: [periodStart, periodEnd]
+      properties:
+        periodStart:
+          type: string
+          format: date
+        periodEnd:
+          type: string
+          format: date
+        employeeIds:
+          type: array
+          items:
+            type: string
+    Payslip:
+      type: object
+      properties:
+        employeeId:
+          type: string
+        normalHours:
+          type: number
+        overtimeHours:
+          type: number
+        gross:
+          type: number
+        tax:
+          type: number
+        super:
+          type: number
+        net:
+          type: number
+    Payrun:
+      type: object
+      properties:
+        id:
+          type: string
+        periodStart:
+          type: string
+          format: date
+        periodEnd:
+          type: string
+          format: date
+        totals:
+          type: object
+          properties:
+            gross:
+              type: number
+            tax:
+              type: number
+            super:
+              type: number
+            net:
+              type: number
+        payslips:
+          type: array
+          items:
+            $ref: '#/components/schemas/Payslip'
+security:
+  - bearerAuth: []
+paths:
+
+  /health:
+    get:
+      summary: Liveness
+      responses:
+        '200':
+          description: OK
+          
+  /employees:
+    get:
+      summary: List employees
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Employee'
+    post:
+      summary: Create or upsert employee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/shared/Employee'
+      responses:
+        '201':
+          description: Created
+
+  /timesheets:
+    post:
+      summary: Create or replace a timesheet for an employee+period
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Timesheet'
+      responses:
+        '201':
+          description: Created
+
+  /payruns:
+    post:
+      summary: Generate a payrun for a period (and optional employee subset)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayrunRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payrun'
+    get:
+      summary: List payruns
+      responses:
+        '200':
+          description: OK
+
+  /payruns/{id}:
+    get:
+      summary: Get a payrun by id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payrun'
+
+  /payslips/{employeeId}/{payrunId}:
+    get:
+      summary: Get a single employee payslip for a payrun
+      parameters:
+        - in: path
+          name: employeeId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: payrunId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payslip'

@@ -21,15 +21,15 @@ model User {
 
 model Employee {
   id             String  @id @default(cuid())
-  email          String  @unique
+  email          String?  @unique
   name           String?
   firstName      String
   lastName       String
   type           String
   baseHourlyRate Float
   superRate      Float
-  bankBsb        String
-  bankAccount    String
+  bankBsb        String?
+  bankAccount    String?
 
   Timesheet      Timesheet[]
   TimesheetEntry TimesheetEntry[]
