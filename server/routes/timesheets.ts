@@ -88,7 +88,6 @@ router.post("/", async (req, res) => {
         });
         res.status(201).json(timesheet);
     } catch (error) {
-        console.error(error);
         res.status(500).json({ error: "Failed to create timesheet" });
     }
 });

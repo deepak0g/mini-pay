@@ -74,3 +74,53 @@ ALTER TABLE
   public."User"
 ADD
   CONSTRAINT "User_pkey" PRIMARY KEY (id);
+
+-- PayRun table
+CREATE TABLE
+  public."PayRun" (
+    id text NOT NULL,
+    "startDate" timestamp(3) without time zone NOT NULL,
+    "endDate" timestamp(3) without time zone NOT NULL,
+    "createdAt" timestamp(3) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" timestamp(3) without time zone NOT NULL,
+    "totalNormalHours" double precision NOT NULL,
+    "totalOvertimeHours" double precision NOT NULL,
+    "totalAllowances" double precision NOT NULL,
+    "totalGross" double precision NOT NULL,
+    "totalTax" double precision NOT NULL,
+    "totalSuper" double precision NOT NULL,
+    "totalNet" double precision NOT NULL
+  );
+
+ALTER TABLE
+  public."PayRun"
+ADD
+  CONSTRAINT "PayRun_pkey" PRIMARY KEY (id);
+
+-- Payslip table
+CREATE TABLE
+  public."Payslip" (
+    id text NOT NULL,
+    "payRunId" text NOT NULL,
+    "employeeId" text NOT NULL,
+    "employeeName" text NOT NULL,
+    "normalHours" double precision NOT NULL,
+    "overtimeHours" double precision NOT NULL,
+    allowances double precision NOT NULL,
+    gross double precision NOT NULL,
+    tax double precision NOT NULL,
+    super double precision NOT NULL,
+    net double precision NOT NULL,
+    "createdAt" timestamp(3) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+
+ALTER TABLE
+  public."Payslip"
+ADD
+  CONSTRAINT "Payslip_pkey" PRIMARY KEY (id);
+
+-- Foreign key for Payslip -> PayRun
+ALTER TABLE
+  public."Payslip"
+ADD
+  CONSTRAINT "Payslip_payRunId_fkey" FOREIGN KEY ("payRunId") REFERENCES public."PayRun" (id) ON DELETE CASCADE ON UPDATE CASCADE;

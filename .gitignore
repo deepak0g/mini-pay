@@ -9,6 +9,7 @@ dist
 # code coverage
 coverage
 *.lcov
+.nyc_output
 
 # logs
 logs
@@ -32,3 +33,8 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # Finder (MacOS) folder config
 .DS_Store
+
+# LocalStack
+localstack-data
+
+.env.test

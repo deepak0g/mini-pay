@@ -52,14 +52,14 @@ export default function PayslipView() {
                                     Pay Period: {format(period.start, 'dd/MM/yyyy')} - {format(period.end, 'dd/MM/yyyy')}
                                 </p>
                             </div>
-                            <button
+                            {/* <button
                                 onClick={handleDownloadPDF}
                                 className="btn-secondary inline-flex items-center"
                                 aria-label="Download payslip as PDF"
                             >
                                 <Download className="w-4 h-4 mr-2" aria-hidden="true" />
                                 Download PDF
-                            </button>
+                            </button> */}
                         </div>
 
                         <div className="border-t border-gray-200 pt-6">

@@ -86,15 +86,201 @@ router.post("/calculate", validateMiddleware({
             }
         );
 
+        // Save payrun to database
+        const payrun = await prisma.payRun.create({
+            data: {
+                startDate: start,
+                endDate: end,
+                totalNormalHours: totals.normalHours,
+                totalOvertimeHours: totals.overtimeHours,
+                totalAllowances: totals.allowances,
+                totalGross: totals.gross,
+                totalTax: totals.tax,
+                totalSuper: totals.super,
+                totalNet: totals.net,
+                payslips: {
+                    create: payslips.map(slip => ({
+                        employeeId: slip.employee.id,
+                        employeeName: slip.employee.name,
+                        normalHours: slip.normalHours,
+                        overtimeHours: slip.overtimeHours,
+                        allowances: slip.allowances,
+                        gross: slip.gross,
+                        tax: slip.tax,
+                        super: slip.super,
+                        net: slip.net,
+                    }))
+                }
+            },
+            include: {
+                payslips: true
+            }
+        });
+
+        logger.info({ payrunId: payrun.id }, "Payrun saved to database");
+
         res.json({
+            id: payrun.id,
             startDate,
             endDate,
             payslips,
             totals,
+            createdAt: payrun.createdAt,
         });
     } catch (error) {
         logger.error({ error }, "Failed to calculate pay run");
         res.status(500).json({ error: "Failed to calculate pay run" });
+    }
+});
+
+// List all payruns
+router.get("/", async (req, res) => {
+    try {
+        const payruns = await prisma.payRun.findMany({
+            orderBy: { createdAt: 'desc' },
+            include: {
+                payslips: {
+                    select: {
+                        id: true,
+                        employeeName: true,
+                    }
+                }
+            }
+        });
+
+        const formatted = payruns.map(pr => ({
+            id: pr.id,
+            startDate: pr.startDate,
+            endDate: pr.endDate,
+            createdAt: pr.createdAt,
+            totalGross: pr.totalGross,
+            employeeCount: pr.payslips.length,
+        }));
+
+        res.json(formatted);
+    } catch (error) {
+        logger.error({ error }, "Failed to list payruns");
+        res.status(500).json({ error: "Failed to list payruns" });
+    }
+});
+
+// Get a specific payrun
+router.get("/:id", async (req, res) => {
+    try {
+        const payrun = await prisma.payRun.findUnique({
+            where: { id: req.params.id },
+            include: {
+                payslips: true
+            }
+        });
+
+        if (!payrun) {
+            return res.status(404).json({ error: "Payrun not found" });
+        }
+
+        // Format response to match PayRunResult type
+        const response = {
+            id: payrun.id,
+            startDate: payrun.startDate.toISOString().split('T')[0],
+            endDate: payrun.endDate.toISOString().split('T')[0],
+            createdAt: payrun.createdAt,
+            payslips: payrun.payslips.map(slip => ({
+                employee: {
+                    id: slip.employeeId,
+                    firstName: slip.employeeName.split(' ')[0] || '',
+                    lastName: slip.employeeName.split(' ')[1] || '',
+                    name: slip.employeeName,
+                },
+                normalHours: slip.normalHours,
+                overtimeHours: slip.overtimeHours,
+                allowances: slip.allowances,
+                gross: slip.gross,
+                tax: slip.tax,
+                super: slip.super,
+                net: slip.net,
+            })),
+            totals: {
+                normalHours: payrun.totalNormalHours,
+                overtimeHours: payrun.totalOvertimeHours,
+                allowances: payrun.totalAllowances,
+                gross: payrun.totalGross,
+                tax: payrun.totalTax,
+                super: payrun.totalSuper,
+                net: payrun.totalNet,
+            }
+        };
+
+        res.json(response);
+    } catch (error) {
+        logger.error({ error, payrunId: req.params.id }, "Failed to get payrun");
+        res.status(500).json({ error: "Failed to get payrun" });
+    }
+});
+
+// Download payrun as JSON (with optional S3 export)
+router.get("/:id/download", async (req, res) => {
+    try {
+        const payrun = await prisma.payRun.findUnique({
+            where: { id: req.params.id },
+            include: {
+                payslips: true
+            }
+        });
+
+        if (!payrun) {
+            return res.status(404).json({ error: "Payrun not found" });
+        }
+
+        // Format response
+        const exportData = {
+            id: payrun.id,
+            startDate: payrun.startDate.toISOString().split('T')[0],
+            endDate: payrun.endDate.toISOString().split('T')[0],
+            createdAt: payrun.createdAt,
+            payslips: payrun.payslips.map(slip => ({
+                employee: {
+                    id: slip.employeeId,
+                    name: slip.employeeName,
+                },
+                normalHours: slip.normalHours,
+                overtimeHours: slip.overtimeHours,
+                allowances: slip.allowances,
+                gross: slip.gross,
+                tax: slip.tax,
+                super: slip.super,
+                net: slip.net,
+            })),
+            totals: {
+                normalHours: payrun.totalNormalHours,
+                overtimeHours: payrun.totalOvertimeHours,
+                allowances: payrun.totalAllowances,
+                gross: payrun.totalGross,
+                tax: payrun.totalTax,
+                super: payrun.totalSuper,
+                net: payrun.totalNet,
+            }
+        };
+
+        // Optional: Save to S3 if enabled
+        if (process.env.USE_LOCALSTACK === "true" || process.env.USE_S3 === "true") {
+            try {
+                const { savePayrunToS3 } = await import("../utils/s3");
+                await savePayrunToS3(payrun.id, exportData);
+                logger.info({ payrunId: payrun.id }, "Payrun exported to S3");
+            } catch (error) {
+                logger.warn({ error, payrunId: payrun.id }, "Failed to export to S3, continuing with download");
+            }
+        }
+
+        // Set headers for file download
+        const filename = `payrun-${exportData.startDate}-${exportData.endDate}.json`;
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        
+        res.json(exportData);
+    } catch (error) {
+        logger.error({ error, payrunId: req.params.id }, "Failed to download payrun");
+        res.status(500).json({ error: "Failed to download payrun" });
     }
 });
 

@@ -144,4 +144,38 @@ export const payrunApi = {
         if (!res.ok) throw new Error("Failed to calculate pay run");
         return res.json();
     },
+
+    getAll: async (): Promise<Array<{
+        id: string;
+        startDate: string;
+        endDate: string;
+        createdAt: string;
+        totalGross: number;
+        employeeCount: number;
+    }>> => {
+        const res = await fetch(`${API_BASE}/payrun`);
+        if (!res.ok) throw new Error("Failed to fetch payruns");
+        return res.json();
+    },
+
+    getById: async (id: string): Promise<PayRunResult> => {
+        const res = await fetch(`${API_BASE}/payrun/${id}`);
+        if (!res.ok) throw new Error("Failed to fetch payrun");
+        return res.json();
+    },
+
+    downloadJSON: async (id: string, startDate: string, endDate: string): Promise<void> => {
+        const res = await fetch(`${API_BASE}/payrun/${id}/download`);
+        if (!res.ok) throw new Error("Failed to download payrun");
+        
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `payrun-${startDate}-${endDate}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+    },
 };

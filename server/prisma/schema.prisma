@@ -58,8 +58,42 @@ model TimesheetEntry {
 }
 
 model TaxRates {
-  id String @id @default(cuid())
-  min Float
-  max Float
+  id   String @id @default(cuid())
+  min  Float
+  max  Float
   rate Float
+}
+
+model PayRun {
+  id         String    @id @default(cuid())
+  startDate  DateTime
+  endDate    DateTime
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  payslips   Payslip[]
+  
+  // Totals stored for quick access
+  totalNormalHours    Float
+  totalOvertimeHours  Float
+  totalAllowances     Float
+  totalGross          Float
+  totalTax            Float
+  totalSuper          Float
+  totalNet            Float
+}
+
+model Payslip {
+  id             String   @id @default(cuid())
+  payRun         PayRun   @relation(fields: [payRunId], references: [id], onDelete: Cascade)
+  payRunId       String
+  employeeId     String
+  employeeName   String
+  normalHours    Float
+  overtimeHours  Float
+  allowances     Float
+  gross          Float
+  tax            Float
+  super          Float
+  net            Float
+  createdAt      DateTime @default(now())
 }

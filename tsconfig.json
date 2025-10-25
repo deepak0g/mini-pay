@@ -1,6 +1,10 @@
 {
   "compilerOptions": {
-    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ESNext",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "target": "ESNext",
     "module": "Preserve",
     "moduleDetection": "force",
@@ -22,6 +26,15 @@
     "isolatedModules": true,
     "esModuleInterop": true
   },
-  "include": ["client/src", "server"],
-  "exclude": ["node_modules"]
+  "include": [
+    "client/src",
+    "server"
+  ],
+  "exclude": [
+    "node_modules"
+  ],
+  "ts-node": {
+    "esm": true,
+    "transpileOnly": true
+  }
 }

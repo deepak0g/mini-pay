@@ -8,6 +8,8 @@ import TimesheetForm from "./pages/TimesheetForm";
 import RunPay from "./pages/RunPay";
 import PayRunSummary from "./pages/PayRunSummary";
 import PayslipView from "./pages/PayslipView";
+import PayRunHistory from "./pages/PayRunHistory";
+import PayRunDetail from "./pages/PayRunDetail";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,11 +22,11 @@ const queryClient = new QueryClient({
 
 function Navigation() {
   const location = useLocation();
-  
+
   const isActive = (path: string) => {
     return location.pathname === path || location.pathname.startsWith(path + "/");
   };
-  
+
   return (
     <nav className="bg-white shadow-sm border-b" role="navigation" aria-label="Main navigation">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -36,11 +38,10 @@ function Navigation() {
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
               <Link
                 to="/"
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  isActive("/") && location.pathname === "/"
-                    ? "border-blue-500 text-gray-900"
-                    : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                }`}
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive("/") && location.pathname === "/"
+                  ? "border-blue-500 text-gray-900"
+                  : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                  }`}
                 aria-current={isActive("/") && location.pathname === "/" ? "page" : undefined}
               >
                 <LayoutDashboard className="w-4 h-4 mr-2" aria-hidden="true" />
@@ -48,11 +49,10 @@ function Navigation() {
               </Link>
               <Link
                 to="/employees"
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  isActive("/employees")
-                    ? "border-blue-500 text-gray-900"
-                    : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                }`}
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive("/employees")
+                  ? "border-blue-500 text-gray-900"
+                  : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                  }`}
                 aria-current={isActive("/employees") ? "page" : undefined}
               >
                 <Users className="w-4 h-4 mr-2" aria-hidden="true" />
@@ -60,11 +60,10 @@ function Navigation() {
               </Link>
               <Link
                 to="/timesheets"
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  isActive("/timesheets")
-                    ? "border-blue-500 text-gray-900"
-                    : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                }`}
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive("/timesheets")
+                  ? "border-blue-500 text-gray-900"
+                  : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                  }`}
                 aria-current={isActive("/timesheets") ? "page" : undefined}
               >
                 <FileText className="w-4 h-4 mr-2" aria-hidden="true" />
@@ -72,15 +71,25 @@ function Navigation() {
               </Link>
               <Link
                 to="/run-pay"
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  isActive("/run-pay")
-                    ? "border-blue-500 text-gray-900"
-                    : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                }`}
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive("/run-pay")
+                  ? "border-blue-500 text-gray-900"
+                  : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                  }`}
                 aria-current={isActive("/run-pay") ? "page" : undefined}
               >
                 <DollarSign className="w-4 h-4 mr-2" aria-hidden="true" />
                 Run Pay
+              </Link>
+              <Link
+                to="/pay-run-history"
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive("/pay-run-history")
+                  ? "border-blue-500 text-gray-900"
+                  : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                  }`}
+                aria-current={isActive("/pay-run-history") ? "page" : undefined}
+              >
+                <DollarSign className="w-4 h-4 mr-2" aria-hidden="true" />
+                Pay Run History
               </Link>
             </div>
           </div>
@@ -106,6 +115,8 @@ function App() {
               <Route path="/timesheets/new" element={<TimesheetForm />} />
               <Route path="/timesheets/:id/edit" element={<TimesheetForm />} />
               <Route path="/run-pay" element={<RunPay />} />
+              <Route path="/pay-run-history" element={<PayRunHistory />} />
+              <Route path="/pay-run-history/:id" element={<PayRunDetail />} />
               <Route path="/pay-run-summary" element={<PayRunSummary />} />
               <Route path="/payslip/:employeeId" element={<PayslipView />} />
             </Routes>
